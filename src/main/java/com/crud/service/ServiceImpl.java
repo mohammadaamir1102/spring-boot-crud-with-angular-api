@@ -1,9 +1,12 @@
 package com.crud.service;
 
+import com.crud.common.dto.PaginationDTO;
+import com.crud.common.dto.ServiceException;
 import com.crud.entity.User;
 import com.crud.exception.ResourceNotFoundException;
 import com.crud.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +15,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -22,6 +27,9 @@ public class ServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    PaginationService paginationService;
 
     @Override
     public User saveUser(User user) {
@@ -109,13 +117,24 @@ public class ServiceImpl implements UserService {
     public void uploadToDb(MultipartFile file) {
         User user = new User();
         try {
-            user.setFileData(file.getBytes());
-            user.setFileType(file.getContentType());
-            user.setFileName(file.getOriginalFilename());
+//            user.setFileData(file.getBytes());
+//            user.setFileType(file.getContentType());
+//            user.setFileName(file.getOriginalFilename());
             userRepository.save(user);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Map getUsersWithPagination(PaginationDTO paginationDTO) throws ServiceException {
+        Page<User> userDetails = userRepository.findAll(paginationService.getPagination(paginationDTO));
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put("data", userDetails);
+        dataMap.put("totalPage", userDetails.getTotalPages());
+        dataMap.put("currentPage", userDetails.getNumber());
+        dataMap.put("totalRecords", userDetails.getTotalElements());
+        return dataMap;
     }
 
 

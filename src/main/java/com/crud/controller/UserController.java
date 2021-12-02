@@ -1,5 +1,7 @@
 package com.crud.controller;
 
+import com.crud.common.dto.PaginationDTO;
+import com.crud.common.dto.ServiceException;
 import com.crud.entity.User;
 import com.crud.repo.UserRepository;
 import com.crud.service.UserService;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("user")
@@ -29,7 +32,7 @@ public class UserController {
         try {
             User existsUser = userRepository.findByUserEmail(user.getUserEmail());
             if (existsUser != null) {
-                return new ResponseEntity<String>("User already exists", HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<String>("This gmail already exists", HttpStatus.INTERNAL_SERVER_ERROR);
             }
             userService.saveUser(user);
         } catch (Exception e) {
@@ -111,6 +114,14 @@ public class UserController {
             return new ResponseEntity<String>("file not uploaded", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<String>("file uploaded in Database ", HttpStatus.OK);
+    }
+
+    @GetMapping("/{offset}/{page}")
+    public Map getUsersWithPagination(@PathVariable Long offset, @PathVariable Long page) throws ServiceException {
+        PaginationDTO paginationDTO = new PaginationDTO();
+        paginationDTO.setOffset(offset.intValue());
+        paginationDTO.setPageNumber(page.intValue());
+        return userService.getUsersWithPagination(paginationDTO);
     }
 
 }
