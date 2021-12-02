@@ -5,12 +5,20 @@ import com.crud.exception.ResourceNotFoundException;
 import com.crud.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ServiceImpl implements UserService {
+
+    private String uploadFolderPath = "/home/aamir/Desktop";
 
     @Autowired
     private UserRepository userRepository;
@@ -62,10 +70,53 @@ public class ServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserByUserNameAndUserMobile(String userName, String userMobile) {
+        User byUserNameAndUserMobile = userRepository.findByUserNameAndUserMobile(userName, userMobile);
+        if (byUserNameAndUserMobile == null) {
+            throw new ResourceNotFoundException("User", "userName", userName);
+        }
+        return byUserNameAndUserMobile;
+    }
+
+//    @Override
+//    public User getUserByUserNameOrUserMobile(String userNameAndMobileNo) throws Exception {
+//        User byUserNameOrUserMobile = userRepository.findByUserNameOrUserMobile(userNameAndMobileNo);
+//        if (byUserNameOrUserMobile==null){
+//            throw new ResourceNotFoundException("User","userName",userNameAndMobileNo);
+//        }
+//        return byUserNameOrUserMobile;
+//    }
+
+    @Override
     public void DeleteById(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(()->new ResourceNotFoundException("User","userId",userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "userId", userId));
         userRepository.deleteById(userId);
     }
+
+    @Override
+    public void uploadToLocal(MultipartFile file) {
+        try {
+            byte[] data = file.getBytes();
+            Path path = Paths.get(uploadFolderPath + file.getOriginalFilename());
+            Files.write(path, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void uploadToDb(MultipartFile file) {
+        User user = new User();
+        try {
+            user.setFileData(file.getBytes());
+            user.setFileType(file.getContentType());
+            user.setFileName(file.getOriginalFilename());
+            userRepository.save(user);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

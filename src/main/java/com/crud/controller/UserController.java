@@ -7,11 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:4200/", "http://localhost:8080"})
 @RequestMapping("user")
 public class UserController {
 
@@ -76,5 +77,40 @@ public class UserController {
         return new ResponseEntity<String>("user id no:" + userId + " has been delete successfully", HttpStatus.OK);
     }
 
+    @GetMapping("/get-name-and-mobile/{userName}/{userMobile}")
+    public ResponseEntity<User> getUserByUserNameOrUserMobile(@PathVariable String userName,
+                                                              @PathVariable String userMobile) throws Exception {
+        return new ResponseEntity<User>(userService.getUserByUserNameAndUserMobile(userName, userMobile), HttpStatus.OK);
+
+    }
+
+    //    @GetMapping("/get-name-or-mobile/{userNameAndMobileNo}")
+//    public ResponseEntity<User> getUserByUserNameOrUserMobile(@PathVariable String userNameAndMobileNo) throws Exception {
+//        return new ResponseEntity<User>(userService.getUserByUserNameOrUserMobile(userNameAndMobileNo), HttpStatus.OK);
+//
+//
+//    }
+    @PostMapping("/upload-local")
+    public ResponseEntity<String> uploadToLocal(@RequestParam("file") MultipartFile file) {
+        try {
+            userService.uploadToLocal(file);
+        } catch (Exception i) {
+            i.printStackTrace();
+            return new ResponseEntity<String>("file not uploaded", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<String>("file uploaded in Local Storage  ", HttpStatus.OK);
+    }
+
+    @PostMapping("/upload-db")
+    public ResponseEntity<String> uploadToDb(@RequestParam("file") MultipartFile file) {
+
+        try {
+            userService.uploadToDb(file);
+        } catch (Exception i) {
+            i.printStackTrace();
+            return new ResponseEntity<String>("file not uploaded", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<String>("file uploaded in Database ", HttpStatus.OK);
+    }
 
 }
